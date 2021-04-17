@@ -136,12 +136,12 @@ StackType_t uxTimerTaskStack[ configTIMER_TASK_STACK_DEPTH ];
 static BaseType_t xTraceRunning = pdTRUE;
 
 
-/*------------------------ Implementação do jogo ZigZag ------------------------*/
+/*############################ Implementação do jogo ZigZag ############################*/
 
-/*  -> Disciplina: Sistemas em Tempo Real
-	-> Professor: Danilo Freire de Souza Santos
-	-> Aluna: Sara Andrade Dias - 116110719
-	-> Projeto: Implementação do jogo ZigZag
+/*  # Disciplina: Sistemas em Tempo Real
+	# Professor: Danilo Freire de Souza Santos
+	# Aluna: Sara Andrade Dias - 116110719
+	# Projeto: Implementação do jogo ZigZag
 */
 
 /* Criando as Task Handlers 
@@ -187,14 +187,16 @@ bool fim_de_jogo = FALSE;
 /* Variável que acompanha o tempo de execução das tarefas sendo executadas */
 int tempo_para_executar = 0;
 
-/* Inicializando os contadores necessários nas tarefas: T1, T2 
+/* Inicializando os contadores necessários nas tarefas: T1, T2, T3 e T5.
    Qaundo o sistema reinicia, todos os contadores também são reiniciados.*/
 
 int contador_T1 = 0;
 int contador_T2 = 0;
+int contador_T3 = 0;
+int contador_T5 = 0;
 
 
-/*---------- Funções das Tarefas do Sistema ----------*/
+/* ---------- Funções das Tarefas do Sistema ---------- */
 
 /* Para implementar as tarefas foram utilizadas funções mock, que são uma versão falsa de um serviço 
    externo ou interno que pode substituir o serviço real, ajudando seus testes de escalonamento. */
@@ -211,15 +213,15 @@ void AtualizaDisplay() {
 		/* A mensagem será apresentada a cada 1s -> 50 * 20 (período da tarefa) = 1000ms = 1s */
 		if (contador_T1 % 50 == 0) {
 			printf("-> O display foi atualizado > %d vezes \n", contador_T1);
+			fflush(stdout);
 		}
+
+		/* Incrementando contador de T1 */
+		contador_T1++;
 
 		/* Simulando o tempo de execução */
 		delay(E_ATUALIZA_DISPLAY);
-		contador_T1++;
-
-		/* Escreve a chamada dessa tarefa em data.txt */
-		write_int(3);
-
+		
 		UltimaAtualizacao = xTaskGetTickCount(); 
 		vTaskDelayUntil(&UltimaAtualizacao, P_ATUALIZA_DISPLAY/2);
 	}
@@ -237,15 +239,15 @@ void CriaCaminho() {
 		/* A mensagem será apresentada a cada 2s -> 100 * 20 (período da tarefa) = 2000ms = 2s */
 		if (contador_T2 % 100 == 0) {
 			printf("-> O caminho foi atualizado > %d vezes \n", contador_T2);
+			fflush(stdout);
 		}
+
+		/* Incrementando contador de T2 */
+		contador_T2++;
 
 		/* Simulando o tempo de execução */
 		delay(E_CRIA_CAMINHO);
-		contador_T2++;
-
-		/* Escreve a chamada dessa tarefa em data.txt */
-		write_int(3); 
-
+		
 		UltimaAtualizacao = xTaskGetTickCount();
 		vTaskDelayUntil(&UltimaAtualizacao, P_CRIA_CAMINHO/2);
 	}
@@ -253,19 +255,19 @@ void CriaCaminho() {
 
 /* T4 - Adiciona diamante: P = D(soft) = 5s; e = 0.5s */
 void AdicionaDiamante() {
-	/* Essa função adiciona um diamante no caminho a cada 5s.
-	   Para simular o tempo de execução dessa tarefa (3ms) foi utilizado a funçao delay(). */
+	/* Essa função adiciona um diamante novo no caminho a cada 5s.
+	   Para simular o tempo de execução dessa tarefa (0.5s) foi utilizado a funçao delay(). */
 
 	TickType_t UltimaAtualizacao;
 
 	while (1) {
 		
-		
-		write_int(4); //escreve a chamada da tarefa no arquivo data.txt
-		printf("Apareceu um obstaculo! P = %d\n", P4);
-
 		/* Simulando o tempo de execução */
-		delay(E_CRIA_CAMINHO);
+		delay(E_ADICIONA_DIAMANTE);
+
+		/* A mensagem será apresentada a cada 5s (período da tarefa) */
+		printf("-> Novo Diamante!! \n")
+		fflush(stdout);
 
 		UltimaAtualizacao = xTaskGetTickCount();
 		vTaskDelayUntil(&UltimaAtualizacao, P_ADICIONA_DIAMANTE/2);
@@ -274,15 +276,127 @@ void AdicionaDiamante() {
 
 /* T5 - Checa fim do jogo: P = D(hard) = 5ms; e = 1ms */
 void ChecaFimDoJogo() {
-	/* */
+	/* Essa função verifica se a partida chegou ao fim, ou seja, a bola caiu.
+	   Para simular o tempo de execução dessa tarefa (1ms) foi utilizado a funçao delay(). */
+
+	TickType_t UltimaAtualizacao;
+
+	while (1) {
+
+		/* Simulando o tempo de execução */
+		delay(E_CHECA_FIM_DO_JOGO);
+		UltimaAtualizacao = xTaskGetTickCount();
+
+		if (fim_de_jogo == FALSE) {
+			/* A mensagem será apresentada a cada 1s -> 200 * 5 (período da tarefa) = 1000ms = 1s */
+			if (contador_T5 % 200 == 0) {
+				printf("-> Fim do Jogo Verificado > %d vezes \n", contador_T5);
+				fflush(stdout);
+			}
+
+			/* Incrementando contador de T5 */
+			contador_T5++;
+		}
+		else {
+			/* A mensagem será apresentada quando ESC for pressionado, simulando fim da partida */
+			printf("### A bolinha caiu ### \n");
+			printf("### Fim de Jogo ### \n");
+
+			finaliza_partida();
+		}
+		vTaskDelayUntil(&UltimaAtualizacao, P_CHECA_FIM_DO_JOGO/2);
+	}
 }
 
 /* T3 - Lê comando do jogador: TE = Tarefa Esporádica; D(hard) = 35ms; e = 3ms */
 static void LeComandoDoJogador() {
-	/* */
+	/* Essa função lê os comandos feitos pelo jogador.
+	   Para simular o tempo de execução dessa tarefa (3ms) foi utilizado a funçao delay(). */
+
+	while (1) {
+		/* Se alguma tecla foi pressionada */
+		if (_kbhit() != 0) {
+
+			int tecla = getch();
+
+			/* Se a tecla ESC for pressionada */
+			if (tecla == 27) {
+				/* Simula a queda da bolinha */
+				fim_de_jogo = TRUE; 
+			}
+			/* Se a barra de espaço for pressionada */
+			else if (tecla == 32) {
+				if (contador_T3 == 0) {
+					printf("Mudando sentido da bolinha para > Direita");
+					contador_T3 = 1;
+				}
+				else if (contador_T3 == 1){
+					printf("Mudando sentido da bolinha para > Esquerda");
+					contador_T3 = 0;
+				}
+			}
+		}
+		vTaskDelay(40);
+	}
 }
 
 
+/* --------------- Funções Auxiliares --------------- */
+
+
+void delay(int tempo_execucao){
+	/* Essa função simula o tempo de execução das tarefas do sistema */
+
+	/* Adicionando tempo de execução à pilha de tempo de execução */
+	int tempo_de_sobra = tempo_para_executar;
+	tempo_para_executar += tempo_execucao;
+
+	/* Armazenando o tempo inicial */
+	TickType_t tempo_inicial = xTaskGetTickCount();
+
+	/* Loop até que o tempo de execução da tarefa seja alcançado */
+	while (xTaskGetTickCount() < tempo_inicial + tempo_para_executar - tempo_de_sobra);
+
+	tempo_para_executar = tempo_de_sobra + tempo_execucao;
+}
+
+void finaliza_partida() {
+	/* Essa função, ao fim de uma partida, oferece a opção de recomeçar outra partida ou sair do jogo. */
+
+	char resposta;
+	while (1) {
+		printf("## Para jogar novamente pressione - 1 - ## \n ## Para sair do jogo pressione - 0 - ## \n");
+		scanf("%c", &resposta);
+		scanf("%c", &resposta); // precisa de dois??????????
+
+		if (resposta == 1) {
+			system("cls");
+			printf("## NOVA PARTIDA ## \n");
+
+			/* Reiniciando as variáveis */
+			fim_de_jogo = FALSE;
+			contador_T1 = 0;
+			contador_T2 = 0;
+			contador_T5 = 0;
+
+			break;
+		}
+
+		else if (resposta == 0) {
+
+			printf("## Até a Próxima ;) ##");
+			Sleep(1000);
+
+			/* Encerra o escalonador do sistema e o programa */
+			vTaskEndScheduler();
+
+			break;
+		}
+	}
+}
+
+
+/* ---------------------- MAIN ---------------------- */
 
 
 int main( void )
@@ -296,15 +410,43 @@ int main( void )
 	See http://www.FreeRTOS.org/trace for more information. */
 	vTraceEnable( TRC_START );
 
+	/* Criando as tarefas 
+	   -> Prioridades: T3 > T5 > T1 > T2 > T4 */
 
+	xTaskCreate(AtualizaDisplay, (signed char*)"Atualiza Display", configMINIMAL_STACK_SIZE, NULL, 3, &HAtualizaDisplay);
+	xTaskCreate(CriaCaminho, (signed char*)"Cria Caminho", configMINIMAL_STACK_SIZE, NULL, 2, &HCriaCaminho);
+	xTaskCreate(LeComandoDoJogador, (signed char*)"Le Comando do Jogador", configMINIMAL_STACK_SIZE, NULL, 5, &HLeComandoDoJogador);
+	xTaskCreate(AdicionaDiamante, (signed char*)"Adiciona Diamante", configMINIMAL_STACK_SIZE, NULL, 1, &HAdicionaDiamante);
+	xTaskCreate(ChecaFimDoJogo, (signed char*)"Checa Fim do Jogo", configMINIMAL_STACK_SIZE, NULL, 4, &HChecaFimDoJogo);
 	
+	/* Criando o menu do jogo */
+
+	int menu = 0;
+
+	while (menu != 1) {
+		system("cls");
+		printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- \n");
+		printf("----------------------------   ZigZag   ----------------------------- \n");
+		printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- \n");
+		printf("-> Para começar a partida pressione - 1 - \n");
+		printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- \n");
+		printf("-> Digite aqui: ");
+		scanf("%d", &menu);
+		printf("\n-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- \n");
+		printf("-> Para mudar o sentido da bolinha pressione a - barra de espaço - \n");
+		printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- \n");
+		printf("---------------------------- Bom Jogo ;p ---------------------------- \n");
+	}
+
+	system("cls");
+
 	vTaskStartScheduler();
 	for (;;);
 	return 0;
 }
 
 
-/*------------------------ Fim da Implementação do jogo ZigZag ------------------------*/
+/* ############################ Fim da Implementação do jogo ZigZag ############################ */
 
 
 void vApplicationMallocFailedHook( void )
