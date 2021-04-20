@@ -143,19 +143,6 @@ static BaseType_t xTraceRunning = pdTRUE;
 	# Projeto: Implementação do jogo ZigZag
 */
 
-/* Criando as Task Handlers 
-	-> T1 - Atualiza display 
-	-> T2 - Cria caminho 
-	-> T3 - Lê comando do jogador 
-	-> T4 - Adiciona diamante 
-	-> T5 - Checa fim do jogo 
-*/
-xTaskHandle HAtualizaDisplay;
-xTaskHandle HCriaCaminho;
-xTaskHandle HLeComandoDoJogador;
-xTaskHandle HAdicionaDiamante;
-xTaskHandle HChecaFimDoJogo;
-
 /* Inicializando os valores dos tempos de execução das tarefas periódicas (ms)
 	-> T1 - Atualiza display (e = 3ms)
 	-> T2 - Cria caminho (e = 3ms)
@@ -267,7 +254,7 @@ void verifica_coleta_de_diamante() {
 	   Se o número sorteado for 1, na simulação o jogador coletou o diamante.
 	   Se o número sorteado for 0, na simulação o jogador não conseguiu coletar o diamante */
 	
-	/* 1 ou 0 é sorteado e atribuido a variável coletou */
+	/* 1 ou 0 é sorteado e atribuído a variável coletou */
 	int coletou = rand() % 2;
 
 	/* Se coletou for igual a 1 (TRUE) */
@@ -317,14 +304,17 @@ void AtualizaDisplay(){
 		/* Simulando o tempo de execução */
 		delay(E_ATUALIZA_DISPLAY);
 
+		/* Coletando o tick atual */
 		UltimaAtualizacao = xTaskGetTickCount();
+
+		/* Função que configura a periodicidade desta tarefa */
 		vTaskDelayUntil(&UltimaAtualizacao, P_ATUALIZA_DISPLAY/2);
 	}
 }
 
 /* T2 - Cria caminho: P = D(soft) = 20ms; e = 3ms */
 void CriaCaminho(){
-	/* Essa função cria o caminho a frente que deve ser atuiaizado no display.
+	/* Essa função cria o caminho a frente que deve ser atualizado no display.
 	   Para simular o tempo de execução dessa tarefa (3ms) foi utilizado a função delay(). */
 
 	TickType_t UltimaAtualizacao;
@@ -344,7 +334,10 @@ void CriaCaminho(){
 		/* Simulando o tempo de execução */
 		delay(E_CRIA_CAMINHO);
 
+		/* Coletando o tick atual */
 		UltimaAtualizacao = xTaskGetTickCount();
+
+		/* Função que configura a periodicidade desta tarefa */
 		vTaskDelayUntil(&UltimaAtualizacao, P_CRIA_CAMINHO / 2);
 	}
 }
@@ -365,9 +358,13 @@ void AdicionaDiamante(){
 		printf("-> Novo Diamante!! \n");
 		fflush(stdout);
 
+		/* Chamada da função que verifica se o jogador conseguiu coletar o diamante */
 		verifica_coleta_de_diamante();
 
+		/* Coletando o tick atual */
 		UltimaAtualizacao = xTaskGetTickCount();
+
+		/* Função que configura a periodicidade desta tarefa */
 		vTaskDelayUntil(&UltimaAtualizacao, P_ADICIONA_DIAMANTE / 2);
 	}
 }
@@ -383,6 +380,8 @@ void ChecaFimDoJogo(){
 	{
 		/* Simulando o tempo de execução */
 		delay(E_CHECA_FIM_DO_JOGO);
+
+		/* Coletando o tick atual */
 		UltimaAtualizacao = xTaskGetTickCount();
 
 		if (fim_de_jogo == FALSE)
@@ -410,6 +409,7 @@ void ChecaFimDoJogo(){
 
 			finaliza_partida();
 		}
+		/* Função que configura a periodicidade desta tarefa */
 		vTaskDelayUntil(&UltimaAtualizacao, P_CHECA_FIM_DO_JOGO / 2);
 	}
 }
@@ -471,9 +471,20 @@ int main(void)
 	See http://www.FreeRTOS.org/trace for more information. */
 	vTraceEnable(TRC_START);
 
+	/* Criando as Task Handlers
+	-> T1 - Atualiza display
+	-> T2 - Cria caminho
+	-> T3 - Lê comando do jogador
+	-> T4 - Adiciona diamante
+	-> T5 - Checa fim do jogo */
+	xTaskHandle HAtualizaDisplay;
+	xTaskHandle HCriaCaminho;
+	xTaskHandle HLeComandoDoJogador;
+	xTaskHandle HAdicionaDiamante;
+	xTaskHandle HChecaFimDoJogo;
+
 	/* Criando as tarefas 
 	   -> Prioridades: T3 > T5 > T1 > T2 > T4 */
-
 	xTaskCreate(AtualizaDisplay, (signed char *)"Atualiza Display", configMINIMAL_STACK_SIZE, NULL, 3, &HAtualizaDisplay);
 	xTaskCreate(CriaCaminho, (signed char *)"Cria Caminho", configMINIMAL_STACK_SIZE, NULL, 2, &HCriaCaminho);
 	xTaskCreate(LeComandoDoJogador, (signed char *)"Le Comando do Jogador", configMINIMAL_STACK_SIZE, NULL, 5, &HLeComandoDoJogador);
