@@ -176,13 +176,12 @@ int tempo_de_execucao = 0;
 /* Inicializando variável que acumula os diamantes coletados pelo jogador */
 int diamantes_coletados = 0;
 
-/* Inicializando os contadores necessários nas tarefas: T1, T2, T3 e T5.
-   Quando o sistema reinicia, todos os contadores também são reiniciados.*/
-
+/* Inicializando os contadores necessários nas tarefas: T1, T2, T3 e T5. */
 int contador_T1 = 0;
 int contador_T2 = 0;
 int contador_T3 = 0;
 int contador_T5 = 0;
+
 
 /* --------------- Funções Auxiliares --------------- */
 
@@ -222,6 +221,7 @@ void finaliza_partida()
 
 			/* Reiniciando as variáveis */
 			fim_de_jogo = FALSE;
+			diamantes_coletados = 0;
 			contador_T1 = 0;
 			contador_T2 = 0;
 			contador_T3 = 0;
@@ -495,7 +495,6 @@ int main(void)
 	srand(time(NULL));
 
 	/* Criando o menu do jogo */
-
 	int menu = 0;
 
 	while (menu != 1)
@@ -521,15 +520,16 @@ int main(void)
 			printf("-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+-+- \n");
 			Sleep(3000);
 		}
-		
 	}
 
 	system("cls");
 
+	/* Inicializa o escalonador do sistema e o programa */
 	vTaskStartScheduler();
 	for (;;);
 	return 0;
 }
+
 
 /* ############################ Fim da Implementação do jogo ZigZag ############################ */
 
